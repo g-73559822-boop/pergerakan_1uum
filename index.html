@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Space Impact Pendidikan Jasmani 1 UUM</title>
+<style>
+:root{--cyan:#5ee7ff;--blue:#168bff;--pink:#ff4c91;--yellow:#ffe66d;--navy:#07142f}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050b20;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif}
+body{display:flex;align-items:center;justify-content:center}
+#app{width:min(100vw,1100px);height:min(100dvh,760px);display:flex;flex-direction:column;padding:8px;gap:7px}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 7px;flex-wrap:wrap}
+.logo{font-weight:1000;letter-spacing:.5px;font-size:clamp(17px,3vw,27px);color:var(--yellow);text-shadow:2px 3px #e44b8c}
+.stats{display:flex;gap:7px;flex-wrap:wrap}
+.pill{border:1px solid #4f85ca;background:#101f43;border-radius:999px;padding:5px 10px;font-size:clamp(11px,1.8vw,14px);font-weight:800}
+#questionBar{background:linear-gradient(100deg,#172c59,#102044);border:2px solid #2f6ba5;border-radius:13px;padding:8px 12px;text-align:center;box-shadow:0 0 18px #1b9cff20}
+#qCount{color:var(--yellow);font-weight:900;font-size:12px;text-transform:uppercase;letter-spacing:1px}
+#question{font-size:clamp(16px,2.6vw,24px);font-weight:900;line-height:1.2;margin-top:2px}
+#hint{font-size:12px;color:#b9d5ff;margin-top:3px}
+#gameWrap{position:relative;flex:1;min-height:180px;border:2px solid #2874c6;border-radius:16px;overflow:hidden;background:#07102c;box-shadow:0 0 22px #148aff30}
+canvas{width:100%;height:100%;display:block;touch-action:none}
+#overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#040a1bdc;padding:18px;text-align:center}
+.panel{max-width:510px;background:linear-gradient(145deg,#142e61,#09162f);border:2px solid #59dfff;border-radius:20px;padding:22px 20px;box-shadow:0 0 28px #2bd9ff30}
+.panel h1{margin:0 0 8px;color:var(--yellow);font-size:clamp(25px,5vw,40px);line-height:1.05}
+.panel p{line-height:1.45;color:#e0edff;margin:8px 0 16px}
+button{font:inherit;cursor:pointer;touch-action:manipulation}
+.primary{border:0;border-radius:999px;padding:12px 22px;font-weight:1000;background:linear-gradient(90deg,#ffdf55,#ff9f43);color:#17234a;box-shadow:0 4px #bd5a36}
+.primary:active{transform:translateY(2px);box-shadow:0 2px #bd5a36}
+#controls{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 3px}
+.pad{display:flex;gap:6px}
+.ctrl{width:clamp(43px,8vw,60px);height:clamp(40px,7vw,52px);border-radius:13px;border:1px solid #3d7dc0;background:#132852;color:white;font-size:20px;font-weight:900;box-shadow:inset 0 -3px #07142c}
+.ctrl.fire{width:clamp(84px,18vw,130px);background:linear-gradient(135deg,#ff4c91,#d72c68);border-color:#ff91bc;font-size:14px;letter-spacing:.5px}
+.ctrl:active,.ctrl.active{background:#2366a9;transform:translateY(1px)}
+.ctrl.fire:active,.ctrl.fire.active{background:#ff78aa}
+#foot{font-size:10px;color:#8ba9d7;text-align:center}
+@media(min-width:700px){#controls{justify-content:center;gap:24px}.ctrl{width:62px;height:48px}}
+@media(max-height:560px){#app{padding:4px;gap:4px}header{padding:0 5px}#questionBar{padding:5px 9px}#hint{display:none}.panel{padding:14px}#controls{gap:5px}.ctrl{height:36px}.pill{padding:3px 8px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo">🚀 SPACE IMPACT <span style="color:#fff">PENDIDIKAN JASMANI 1 UUM</span></div>
+    <div class="stats">
+      <div class="pill">⭐ Markah: <span id="score">0</span></div>
+      <div class="pill">❤️ Nyawa: <span id="lives">3</span></div>
+      <div class="pill">🎯 Soalan: <span id="progress">0/7</span></div>
+    </div>
+  </header>
+  <section id="questionBar">
+    <div id="qCount">MISI 1</div>
+    <div id="question">Tekan MULA untuk memulakan misi!</div>
+    <div id="hint">Gerakkan kapal dan tembak sasaran yang membawa jawapan betul.</div>
+  </section>
+  <main id="gameWrap">
+    <canvas id="game" aria-label="Permainan Space Impact Pendidikan Jasmani 1UUM"></canvas>
+    <div id="overlay">
+      <div class="panel">
+        <h1 id="overlayTitle">MISI ANGKASA PJ</h1>
+        <p id="overlayText">Bersedia, angkasawan! Gerakkan kapal ke kiri dan kanan. Tembak sasaran jawapan yang betul untuk mengumpul markah.</p>
+        <p style="font-size:13px">⌨️ Komputer: ← → atau A/D, tekan SPACE untuk tembak.<br>📱 Telefon: guna butang arah dan TEMBAK.</p>
+        <button class="primary" id="startBtn">🚀 MULA MISI</button>
+      </div>
+    </div>
+  </main>
+  <div id="controls">
+    <div class="pad">
+      <button class="ctrl" data-key="left" aria-label="Gerak kiri">◀</button>
+      <button class="ctrl" data-key="right" aria-label="Gerak kanan">▶</button>
+    </div>
+    <button class="ctrl fire" data-key="fire">✦ TEMBAK</button>
+  </div>
+  <div id="foot">Pendidikan Jasmani Tahun 1 1UUM • Setiap soalan hanya satu percubaan.</div>
+</div>
+<script>
+/* =========================================================
+   EDIT SOALAN DI SINI:
+   Setiap soalan mempunyai teks soalan, 3 pilihan jawapan,
+   dan nombor jawapan betul (0, 1 atau 2).
+   ========================================================= */
+const QUESTIONS = [
+ // 7 soalan contoh asal — dikekalkan
+ {q:"Yang manakah pergerakan lokomotor?", a:["Berlari","Membongkok","Memutar"], correct:0},
+ {q:"Pergerakan yang menyebabkan badan berpindah tempat ialah…", a:["Duduk","Berjalan","Meregang"], correct:1},
+ {q:"Yang manakah pergerakan bukan lokomotor?", a:["Melompat ke hadapan","Berlari","Membongkok"], correct:2},
+ {q:"Apakah contoh pergerakan lokomotor?", a:["Berjalan","Berdiri satu kaki","Memutar badan"], correct:0},
+ {q:"Pergerakan bukan lokomotor tidak menyebabkan badan…", a:["Berpindah tempat","Meregang","Membongkok"], correct:0},
+ {q:"Yang manakah pergerakan bukan lokomotor?", a:["Melangkah","Merangkak","Berdiri dengan satu kaki"], correct:2},
+ {q:"Apabila kita melompat ke hadapan, kita melakukan pergerakan…", a:["Bukan lokomotor","Lokomotor","Duduk"], correct:1},
+
+ // 4 soalan baharu daripada latihan isi tempat kosong
+ {q:"Denyutan nadi boleh dikesan di bahagian _____.", a:["Kepala","Tangan","Lutut"], correct:1},
+ {q:"_____ badan sebelum memulakan sesuatu aktiviti.", a:["Menyejukkan","Merehatkan","Memanaskan"], correct:2},
+ {q:"_____ air secukupnya sebelum dan selepas aktiviti.", a:["Minum","Tuang","Simpan"], correct:0},
+ {q:"Patuhi _____ guru semasa melakukan aktiviti.", a:["Permainan","Arahan","Pakaian"], correct:1},
+
+ // 6 soalan baharu: Betul atau Salah
+ {q:"Berjoging dengan memakai selipar.", a:["BETUL","SALAH"], correct:1},
+ {q:"Berenang boleh menguatkan jantung.", a:["BETUL","SALAH"], correct:0},
+ {q:"Badan sihat jika kita selalu bersenam.", a:["BETUL","SALAH"], correct:0},
+ {q:"Bermain bola sepak di kawasan kantin.", a:["BETUL","SALAH"], correct:1},
+ {q:"Sentiasa patuhi arahan guru ketika bersenam.", a:["BETUL","SALAH"], correct:0},
+ {q:"Guna tilam semasa melakukan aktiviti gulingan.", a:["BETUL","SALAH"], correct:0}
+];
+
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+const scoreEl=document.getElementById('score'), livesEl=document.getElementById('lives'), progressEl=document.getElementById('progress');
+const questionEl=document.getElementById('question'), qCountEl=document.getElementById('qCount'), hintEl=document.getElementById('hint');
+const overlay=document.getElementById('overlay'), overlayTitle=document.getElementById('overlayTitle'), overlayText=document.getElementById('overlayText'), startBtn=document.getElementById('startBtn');
+let W=800,H=450, running=false, ended=false, score=0, lives=3, qIndex=0, ship, bullets=[], targets=[], stars=[], keys={}, lastShot=0, lastTime=0, frame=0;
+let questionLocked=false, feedback="", feedbackUntil=0, currentQuestion=null;
+function resize(){
+ const r=canvas.getBoundingClientRect(); const dpr=Math.min(window.devicePixelRatio||1,2);
+ W=Math.max(300,r.width);H=Math.max(180,r.height);
+ canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);
+ makeStars();
+ if(ship){ship.x=Math.min(W-25,Math.max(25,ship.x));ship.y=H-48;}
+ draw();
+}
+function makeStars(){stars=Array.from({length:75},()=>({x:Math.random()*W,y:Math.random()*H,s:Math.random()*2+.5,v:Math.random()*1.1+.25}));}
+function resetGame(){score=0;lives=3;qIndex=0;bullets=[];targets=[];ended=false;questionLocked=false;feedback="";ship={x:W/2,y:H-48,w:34,h:34,speed:W<500?4.1:5.2};scoreEl.textContent=score;livesEl.textContent=lives;progressEl.textContent=`0/${QUESTIONS.length}`;nextQuestion();running=true;overlay.style.display='none';lastTime=performance.now();requestAnimationFrame(loop);}
+function nextQuestion(){
+ if(qIndex>=QUESTIONS.length){finish(true);return;}
+ currentQuestion=QUESTIONS[qIndex];questionLocked=false;bullets=[];targets=[];
+ questionEl.textContent=currentQuestion.q;qCountEl.textContent=`MISI ${qIndex+1} DARIPADA ${QUESTIONS.length}`;
+ progressEl.textContent=`${qIndex}/${QUESTIONS.length}`;
+ hintEl.textContent="Tembak satu sasaran jawapan. Setiap soalan hanya satu percubaan!";
+ const colors=['#ffcc4d','#ff5c9d','#50e6ff'];
+ const spacing=W/(currentQuestion.a.length+1);
+ currentQuestion.a.forEach((label,i)=>targets.push({x:spacing*(i+1),y:Math.max(65,H*.27)+i*10,label,index:i,r:Math.min(62,Math.max(42,W*.075)),color:colors[i%colors.length],phase:i*1.7,baseX:spacing*(i+1)}));
+}
+function finish(won){
+ running=false;ended=true;overlay.style.display='flex';
+ overlayTitle.textContent=won?'🏆 MISI SELESAI!':'🚀 CUBA LAGI, ANGKASAWAN!';
+ overlayText.innerHTML=`Markah akhir: <b style="color:#ffe66d;font-size:24px">${score}</b><br>Jawapan betul: ${Math.round(score/10)} daripada ${QUESTIONS.length}<br><br>${won?'Hebat! Kamu sudah menamatkan misi Pendidikan Jasmani.':'Nyawa kapal sudah habis. Teruskan berlatih Pendidikan Jasmani!'}`;
+ startBtn.textContent='↻ MAIN SEMULA';
+}
+function drawSpace(){
+ const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#09112e');g.addColorStop(.55,'#101b46');g.addColorStop(1,'#061027');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ stars.forEach(s=>{ctx.fillStyle=`rgba(190,230,255,${.35+Math.sin(frame*.04+s.x)*.35})`;ctx.fillRect(s.x,s.y,s.s,s.s);});
+ // distant planets
+ ctx.globalAlpha=.22;ctx.fillStyle='#7c5cff';ctx.beginPath();ctx.arc(W*.83,H*.22,Math.min(W,H)*.085,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+ ctx.strokeStyle='#273f7c';ctx.lineWidth=1;for(let y=H*.7;y<H;y+=22){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+}
+function drawShip(){
+ if(!ship)return;ctx.save();ctx.translate(ship.x,ship.y);
+ ctx.fillStyle='#ff9f43';ctx.beginPath();ctx.moveTo(-7,14);ctx.lineTo(0,27+Math.random()*5);ctx.lineTo(7,14);ctx.fill();
+ ctx.fillStyle='#e8f7ff';ctx.strokeStyle='#50dfff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-22);ctx.lineTo(18,14);ctx.lineTo(7,10);ctx.lineTo(0,14);ctx.lineTo(-7,10);ctx.lineTo(-18,14);ctx.closePath();ctx.fill();ctx.stroke();
+ ctx.fillStyle='#168bff';ctx.beginPath();ctx.ellipse(0,-5,5,9,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle='#ff4c91';ctx.beginPath();ctx.moveTo(-17,8);ctx.lineTo(-26,17);ctx.lineTo(-10,13);ctx.fill();ctx.beginPath();ctx.moveTo(17,8);ctx.lineTo(26,17);ctx.lineTo(10,13);ctx.fill();
+ ctx.restore();
+}
+function drawTargets(){
+ targets.forEach(t=>{t.x=t.baseX+Math.sin(frame*.025+t.phase)*Math.min(28,W*.035);
+ ctx.save();ctx.translate(t.x,t.y);ctx.shadowColor=t.color;ctx.shadowBlur=14;
+ ctx.fillStyle=t.color;ctx.strokeStyle='#fff';ctx.lineWidth=2;
+ // alien target
+ ctx.beginPath();ctx.ellipse(0,0,t.r*.58,t.r*.43,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.shadowBlur=0;
+ ctx.fillStyle='#101c3d';ctx.beginPath();ctx.arc(-t.r*.18,-t.r*.04,t.r*.08,0,Math.PI*2);ctx.arc(t.r*.18,-t.r*.04,t.r*.08,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle='#101c3d';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,t.r*.09,t.r*.13,.15,Math.PI-.15);ctx.stroke();
+ ctx.fillStyle='#fff';ctx.font=`900 ${Math.max(10,Math.min(14,W*.022))}px system-ui`;ctx.textAlign='center';ctx.textBaseline='top';
+ const words=wrapText(t.label,Math.max(100,W*.28));let y=t.r*.55;
+ words.forEach(line=>{ctx.fillStyle='#fff';ctx.strokeStyle='#07142f';ctx.lineWidth=3;ctx.strokeText(line,0,y);ctx.fillText(line,0,y);y+=15;});
+ ctx.restore();});
+}
+function wrapText(text,maxWidth){ctx.font=`900 ${Math.max(10,Math.min(14,W*.022))}px system-ui`;let words=text.split(' '),lines=[],line='';words.forEach(w=>{let test=line?line+' '+w:w;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=w;}else line=test;});if(line)lines.push(line);return lines;}
+function draw(){
+ if(!W||!H)return;drawSpace();drawTargets();
+ bullets.forEach(b=>{ctx.fillStyle='#ffe66d';ctx.shadowColor='#ffe66d';ctx.shadowBlur=12;ctx.fillRect(b.x-2,b.y-10,4,13);ctx.shadowBlur=0;});
+ drawShip();
+ if(feedback&&performance.now()<feedbackUntil){ctx.font='900 20px system-ui';ctx.textAlign='center';ctx.fillStyle=feedback.includes('BETUL')?'#7dffb0':'#ff7ba7';ctx.fillText(feedback,W/2,H*.52);}
+}
+function shoot(){if(!running||questionLocked)return;const now=performance.now();if(now-lastShot<240)return;lastShot=now;bullets.push({x:ship.x,y:ship.y-22,v:W<500?7:8});}
+function loop(now){
+ if(!running)return;const dt=Math.min(2,(now-lastTime)/16.67||1);lastTime=now;frame++;
+ if(keys.left)ship.x-=ship.speed*dt;if(keys.right)ship.x+=ship.speed*dt;
+ ship.x=Math.max(24,Math.min(W-24,ship.x));
+ stars.forEach(s=>{s.y+=s.v*dt;if(s.y>H){s.y=0;s.x=Math.random()*W;}});
+ bullets.forEach(b=>b.y-=b.v*dt);bullets=bullets.filter(b=>b.y>-20);
+ // Collisions: first target hit locks the question, so there is only one answer attempt.
+ let hit=null;
+ for(let bi=bullets.length-1;bi>=0&&!hit;bi--){for(const t of targets){if(Math.abs(bullets[bi].x-t.x)<t.r*.7+4&&Math.abs(bullets[bi].y-t.y)<t.r*.6+7){hit=t;break;}}}
+ if(hit&&!questionLocked){
+   questionLocked=true;bullets=[];const correct=hit.index===currentQuestion.correct;
+   if(correct){score+=10;scoreEl.textContent=score;feedback='JAWAPAN BETUL! +10 ⭐';}
+   else{lives--;livesEl.textContent=lives;feedback='BELUM TEPAT!';}
+   feedbackUntil=performance.now()+1000;targets=[];draw();
+   setTimeout(()=>{if(!running)return;if(lives<=0){finish(false);return;}qIndex++;if(qIndex>=QUESTIONS.length){finish(true);return;}nextQuestion();},1050);
+ }
+ draw();requestAnimationFrame(loop);
+}
+function overlayStart(){resetGame();}
+startBtn.addEventListener('click',overlayStart);
+window.addEventListener('resize',resize);
+window.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight',' ','a','A','d','D'].includes(e.key))e.preventDefault();if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A')keys.left=true;if(e.key==='ArrowRight'||e.key==='d'||e.key==='D')keys.right=true;if(e.key===' '||e.key==='ArrowUp')shoot();if(!running&&(e.key==='Enter'))overlayStart();});
+window.addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A')keys.left=false;if(e.key==='ArrowRight'||e.key==='d'||e.key==='D')keys.right=false;});
+document.querySelectorAll('[data-key]').forEach(btn=>{
+ const k=btn.dataset.key;
+ const down=e=>{e.preventDefault();btn.classList.add('active');if(k==='left')keys.left=true;else if(k==='right')keys.right=true;else shoot();};
+ const up=e=>{e.preventDefault();btn.classList.remove('active');if(k==='left')keys.left=false;if(k==='right')keys.right=false;};
+ btn.addEventListener('pointerdown',down);btn.addEventListener('pointerup',up);btn.addEventListener('pointercancel',up);btn.addEventListener('pointerleave',up);
+});
+resize();
+</script>
+</body>
+</html>
